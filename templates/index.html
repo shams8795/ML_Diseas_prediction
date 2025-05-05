@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Liver Disease Diagnosis</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏥 Liver Disease Diagnosis System</h1>
+            <p class="subtitle">Using Machine Learning for Early Detection</p>
+        </header>
+
+        <main>
+            <div class="card">
+                <h2>Patient Information</h2>
+                <form id="diagnosisForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="age">Age</label>
+                            <input type="number" id="age" placeholder="Enter age" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="sex">Sex</label>
+                            <select id="sex" required>
+                                <option value="0">Male</option>
+                                <option value="1">Female</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="alb">ALB</label>
+                            <input type="number" id="alb" step="0.1" placeholder="Albumin" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="alp">ALP</label>
+                            <input type="number" id="alp" step="0.1" placeholder="Alkaline Phosphatase" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="alt">ALT</label>
+                            <input type="number" id="alt" step="0.1" placeholder="Alanine Aminotransferase" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="ast">AST</label>
+                            <input type="number" id="ast" step="0.1" placeholder="Aspartate Aminotransferase" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="bil">BIL</label>
+                            <input type="number" id="bil" step="0.1" placeholder="Bilirubin" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="che">CHE</label>
+                            <input type="number" id="che" step="0.1" placeholder="Cholinesterase" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="chol">CHOL</label>
+                            <input type="number" id="chol" step="0.1" placeholder="Cholesterol" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="crea">CREA</label>
+                            <input type="number" id="crea" step="0.1" placeholder="Creatinine" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="ggt">GGT</label>
+                            <input type="number" id="ggt" step="0.1" placeholder="Gamma-GT" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="prot">PROT</label>
+                            <input type="number" id="prot" step="0.1" placeholder="Protein" required>
+                        </div>
+                    </div>
+
+                    <button type="submit">Get Diagnosis</button>
+                </form>
+            </div>
+
+            <div class="results-container" style="display: none;">
+                <h2>Diagnosis Results</h2>
+                <div class="model-results">
+                    <div class="result-card" id="rf-result">
+                        <div class="model-header">
+                            <h3>🌲 Random Forest</h3>
+                            <span class="accuracy">Accuracy: 88.6%</span>
+                        </div>
+                        <p class="diagnosis"></p>
+                    </div>
+                    <div class="result-card" id="ada-result">
+                        <div class="model-header">
+                            <h3>🔄 AdaBoost</h3>
+                            <span class="accuracy">Accuracy: 85.4%</span>
+                        </div>
+                        <p class="diagnosis"></p>
+                    </div>
+                    <div class="result-card" id="nb-result">
+                        <div class="model-header">
+                            <h3>📊 Naive Bayes</h3>
+                            <span class="accuracy">Accuracy: 87.0%</span>
+                        </div>
+                        <p class="diagnosis"></p>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <p>This system uses machine learning to assist in diagnosis. Always consult with healthcare professionals.</p>
+        </footer>
+    </div>
+
+    <script>
+        document.getElementById('diagnosisForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = {
+                'Age': parseFloat(document.getElementById('age').value),
+                'Sex': parseInt(document.getElementById('sex').value),
+                'ALB': parseFloat(document.getElementById('alb').value),
+                'ALP': parseFloat(document.getElementById('alp').value),
+                'ALT': parseFloat(document.getElementById('alt').value),
+                'AST': parseFloat(document.getElementById('ast').value),
+                'BIL': parseFloat(document.getElementById('bil').value),
+                'CHE': parseFloat(document.getElementById('che').value),
+                'CHOL': parseFloat(document.getElementById('chol').value),
+                'CREA': parseFloat(document.getElementById('crea').value),
+                'GGT': parseFloat(document.getElementById('ggt').value),
+                'PROT': parseFloat(document.getElementById('prot').value)
+            };
+
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const results = await response.json();
+                
+                document.querySelector('.results-container').style.display = 'block';
+                document.querySelector('.results-container').scrollIntoView({ behavior: 'smooth' });
+                
+                document.querySelector('#rf-result .diagnosis').textContent = results.random_forest.diagnosis;
+                document.querySelector('#ada-result .diagnosis').textContent = results.adaboost.diagnosis;
+                document.querySelector('#nb-result .diagnosis').textContent = results.naive_bayes.diagnosis;
+            } catch (error) {
+                alert('Error getting diagnosis: ' + error.message);
+            }
+        });
+    </script>
+</body>
+</html>
